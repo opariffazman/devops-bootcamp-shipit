@@ -1,6 +1,6 @@
 {
-  "shipName": "Kapal OP",
-  "color": "#00ffee",
-  "shipModel": "fighter",
+  "shipName": "Kapal DEVOPS",
+  "color": "#1100ff",
+  "shipModel": "scout",
   "emblem": "comet"
 }
