@@ -12,11 +12,15 @@ export function createShip({ callsign, color }) {
     emissive: tint.clone(), emissiveIntensity: 0.35, // low glow → blooms
   });
 
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.5, 16), mat);
+  // Tapered octagonal body + sharp nose read as a rocket silhouette at a
+  // distance; low radial-segment count keeps the low-poly look intentional
+  // rather than a smoothed-out blob.
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.15, 0.5, 8), mat);
   group.add(body);
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.24, 16), mat);
-  nose.position.y = 0.37;
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.3, 8), mat);
+  nose.position.y = 0.4;
   group.add(nose);
+  for (const fin of makeFins(mat)) group.add(fin);
 
   // Exhaust trail — additive so it blooms; hidden until launch.
   const trailMat = new THREE.MeshBasicMaterial({
@@ -52,6 +56,27 @@ export function setGrounded(group, on) {
   const { mat, baseEmissive, color } = group.userData;
   mat.emissive.set(on ? PALETTE.grounded : color);
   mat.emissiveIntensity = on ? 0.6 : baseEmissive;
+}
+
+// Four swept fins at the body's base — the detail that reads "rocket" instead
+// of "cylinder" at small scale. Shared geometry, tinted with the body material.
+function makeFins(mat) {
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0.18);
+  shape.lineTo(0.16, -0.02);
+  shape.lineTo(0.05, -0.12);
+  shape.closePath();
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.03, bevelEnabled: false });
+  geo.translate(0, 0, -0.015);
+
+  const fins = [];
+  for (let i = 0; i < 4; i++) {
+    const fin = new THREE.Mesh(geo, mat);
+    fin.position.y = -0.16;
+    fin.rotation.y = (i / 4) * Math.PI * 2;
+    fins.push(fin);
+  }
+  return fins;
 }
 
 // Projector-legible: big canvas, white fill with a dark stroke so the callsign
