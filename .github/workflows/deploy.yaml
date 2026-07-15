@@ -13,6 +13,7 @@ jobs:
       - run: npm run test
   say-goodbye:
     runs-on: ubuntu-latest
+    needs: say-hello
     defaults:
       run:
         working-directory: launchpad
