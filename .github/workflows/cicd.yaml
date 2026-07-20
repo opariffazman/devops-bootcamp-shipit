@@ -1,5 +1,7 @@
-name: test
-on: [pull_request]
+name: cicd
+on:
+  pull_request:
+    types: [synchronize, closed]
 defaults:
   run:
     working-directory: launchpad
