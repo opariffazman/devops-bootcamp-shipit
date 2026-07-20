@@ -7,6 +7,7 @@ defaults:
   run:
     working-directory: launchpad
 
+jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:

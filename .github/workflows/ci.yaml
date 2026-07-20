@@ -1,5 +1,5 @@
 name: test
-on: [push_request]
+on: [push]
 defaults:
   run:
     working-directory: launchpad
