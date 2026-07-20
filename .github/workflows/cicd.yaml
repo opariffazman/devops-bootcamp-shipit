@@ -1,7 +1,7 @@
 name: cicd
 on:
   pull_request:
-    types: [synchronize, closed]
+    types: [opened, synchronize, reopened, closed]
 defaults:
   run:
     working-directory: launchpad
