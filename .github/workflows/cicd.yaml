@@ -1,14 +1,20 @@
-name: deploy
-on:
-  push:
-    branches: [main]
-
+name: test
+on: [pull_request]
 defaults:
   run:
     working-directory: launchpad
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+      - run: npm clean-install
+      - run: npm run test
   deploy:
+    needs: test
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
