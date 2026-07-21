@@ -1,4 +1,4 @@
-name: deploy
+name: cicd
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
