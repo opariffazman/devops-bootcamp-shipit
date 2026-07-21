@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import WebSocket from 'ws';
 import { createServer } from '../src/app.js';
+import { STORIES } from '../src/corpus.js';
 
 const post = (port, body, headers = {}) =>
   fetch(`http://localhost:${port}/api/event`, {
@@ -116,7 +117,8 @@ test('operator can start a race; cockpit progress advances the snapshot', async 
 
     assert.equal((await postTo(port, '/api/race/start', { session: 'cicd3' }, opHeader('op-key'))).status, 202);
     const running = await nextMsg(cockpit, (m) => m.t === 'race' && m.phase === 'running');
-    assert.equal(running.prompts.length, 12);
+    assert.deepEqual(running.prompts, STORIES.cicd3); // the full story, in slide order
+    assert.equal(running.total, STORIES.cicd3.length);
     const mine = running.ships.find((s) => s.callsign === 'octocat');
     assert.equal(mine.completed, 0);
     assert.equal(mine.color, '#22d3ee'); // enriched from the roster
@@ -135,5 +137,24 @@ test('operator endpoints require the operator key when set', async () => {
     assert.equal((await postTo(port, '/api/race/start', {})).status, 401);
     assert.equal((await postTo(port, '/api/race/start', {}, opHeader('wrong'))).status, 401);
     assert.equal((await postTo(port, '/api/view', { view: 'race' }, opHeader('op-key'))).status, 202);
+  } finally { await app.close(); }
+});
+
+test('cockpit frac ripples into the race broadcast without advancing', async () => {
+  const app = createServer({ port: 0, token: null, operatorKey: 'op-key' });
+  const port = app.port;
+  try {
+    await post(port, ev);
+    const cockpit = await openClient(port);
+    await nextMsg(cockpit, (m) => m.t === 'roster');
+    cockpit.send(JSON.stringify({ t: 'join', callsign: 'octocat' }));
+    await postTo(port, '/api/race/start', { session: 'cicd3' }, opHeader('op-key'));
+    await nextMsg(cockpit, (m) => m.t === 'race' && m.phase === 'running');
+
+    cockpit.send(JSON.stringify({ t: 'progress', completed: 0, frac: 0.5 }));
+    const partial = await nextMsg(cockpit, (m) =>
+      m.t === 'race' && m.ships.some((s) => s.callsign === 'octocat' && s.frac === 0.5));
+    assert.equal(partial.ships.find((s) => s.callsign === 'octocat').completed, 0);
+    cockpit.close();
   } finally { await app.close(); }
 });
