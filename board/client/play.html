@@ -8,10 +8,21 @@
   </head>
   <body>
     <main id="cockpit">
-      <p id="status">connecting…</p>
-      <div id="track"><div id="me"></div></div>
-      <pre id="prompt" aria-live="polite"></pre>
-      <input id="entry" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus />
+      <div id="field"></div>
+      <div id="dock">
+        <div id="statusrow">
+          <p id="status">connecting…</p>
+          <button id="mute" type="button" aria-label="toggle sound">🔊</button>
+        </div>
+        <div id="term">
+          <div id="termbar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span id="termtitle">shipit — cockpit</span>
+          </div>
+          <pre id="line" aria-live="polite"><span id="ps1">$ </span><span id="typed"></span><span id="caret"></span><span id="rest"></span></pre>
+          <input id="entry" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" autofocus aria-label="type the command" />
+        </div>
+      </div>
     </main>
     <script type="module" src="./play.js"></script>
   </body>

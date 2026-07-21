@@ -73,7 +73,7 @@ export function createServer({ port = 3000, token = null, operatorKey = null, pu
           const s = body.session ? String(body.session) : session;
           if (!SESSIONS[s]) return json(res, 400, { error: 'unknown session' });
           session = s;
-          race.start(pickPrompts(session, race.total));
+          race.start(pickPrompts(session));
           raceDirty = true;
           return json(res, 202, { ok: true });
         });
@@ -93,6 +93,7 @@ export function createServer({ port = 3000, token = null, operatorKey = null, pu
       // static: serve the Vite-built client
       let rel = decodeURIComponent((req.url || '/').split('?')[0]);
       if (rel === '/play') rel = '/play.html';
+      if (rel === '/operator') rel = '/operator.html';
       if (rel === '/' || rel === '') rel = '/index.html';
       const file = path.join(publicDir, path.normalize(rel));
       if (!file.startsWith(publicDir)) { res.writeHead(403); return res.end('forbidden'); }
@@ -114,7 +115,7 @@ export function createServer({ port = 3000, token = null, operatorKey = null, pu
         race.join(m.callsign);
         raceDirty = true;
       } else if (m.t === 'progress' && ws.callsign && Number.isInteger(m.completed)) {
-        race.progress(ws.callsign, m.completed);
+        race.report(ws.callsign, m.completed, m.frac);
         raceDirty = true;
       }
     });

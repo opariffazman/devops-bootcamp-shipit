@@ -1,46 +1,58 @@
-// Commands the race can quiz, grouped by tool. Session-gated so a race only
-// shows commands taught up to that point (inventory: slides repo, up to CI/CD 3).
-export const CORPUS = {
-  linux: [
-    'ls -l', 'cd ..', 'pwd', 'cat file.txt', 'mkdir build', 'touch app.js',
-    'cp a.txt b.txt', 'mv old new', 'rm -f tmp', 'chmod +x run.sh', 'grep -r TODO',
-    'ps aux', 'kill -9 123', 'curl -sS localhost', 'ssh ec2-user@host', 'tail -f log',
+// The race's command stories. Every command is verbatim from the bootcamp
+// slides (inventory: ~/repo/slides-devops-bootcamp/slides/2026, up to CI/CD 3),
+// and each story is SEQUENCED — run top to bottom it is one coherent workflow,
+// every line's precondition set up by the line before. The order IS the
+// lesson, so prompts are never shuffled.
+export const STORIES = {
+  // CI/CD 3 race — "fork to first contact": sign in, fork the ship, pass the
+  // gate, build, push, wire the secret, launch the pipeline, find your URL.
+  cicd3: [
+    'gh auth login',
+    'gh repo fork Infratify/devops-bootcamp-shipit --clone',
+    'cd devops-bootcamp-shipit',
+    'code .',
+    'git status',
+    'cd launchpad && npm run test',
+    'npm run build',
+    'git add .',
+    'git commit -m "kemas laman"',
+    'git push',
+    'gh secret set SHIPIT_TOKEN',
+    'gh secret list',
+    'gh workflow run deploy.yaml',
+    'gh workflow view -w',
+    'echo $?',
+    'gh api repos/{owner}/{repo}/pages --jq .html_url',
   ],
-  git: [
-    'git init', 'git status', 'git add .', 'git commit -m "wip"', 'git push',
-    'git pull', 'git switch main', 'git checkout -b feat', 'git merge dev', 'git log --oneline',
-  ],
-  gh: [
-    'gh repo fork', 'gh repo sync', 'gh pr create', 'gh pr merge', 'gh secret set SHIPIT_TOKEN',
-    'gh variable set BOARD_URL', 'gh secret list', 'gh workflow view',
-  ],
-  docker: [
-    'docker build -t app .', 'docker run -d -p 3000:3000 app', 'docker ps -a', 'docker pull nginx',
-    'docker logs -f app', 'docker exec -it app sh', 'docker stop app', 'docker push app', 'docker compose up -d',
-  ],
-  aws: [
-    'aws configure', 'aws sts get-caller-identity', 'aws s3 ls', 'aws s3 cp f s3://b',
-    'aws ec2 describe-instances', 'aws ssm start-session', 'aws ecr get-login-password',
+  // CI/CD 4 race — "capstone: container to your own server": sync the fork,
+  // pass the gate, containerise, verify, ship it to EC2, merge the ritual PR.
+  cicd4: [
+    'git fetch upstream',
+    'git merge upstream/main',
+    'cd launchpad && npm run test',
+    'npm run build',
+    'docker build -t web:v1 .',
+    'docker images',
+    'docker run -d -p 8080:80 --name web web:v1',
+    'docker ps',
+    'docker logs -f web',
+    'docker tag web:v1 infratify/web:v1',
+    'aws sts get-caller-identity',
+    'ssh bootcamp',
+    'curl -fsSL https://get.docker.com | sudo sh',
+    'docker compose pull',
+    'docker compose up -d',
+    'docker compose ps',
+    'curl -s https://checkip.amazonaws.com',
+    'exit',
+    'gh pr create --fill',
+    'gh pr merge --squash --delete-branch',
   ],
 };
 
-// Which tool pools are unlocked by (i.e. taught by) a given session.
-export const SESSIONS = {
-  cicd3: ['linux', 'git', 'gh', 'docker', 'aws'],
-  cicd4: ['linux', 'git', 'gh', 'docker', 'aws'],
-};
+// Known race sessions (app.js validates /api/race/start against these keys).
+export const SESSIONS = STORIES;
 
-export function pool(session) {
-  const tools = SESSIONS[session] || [];
-  return tools.flatMap((k) => CORPUS[k] || []);
-}
-
-export function pickPrompts(session, n = 12, rand = Math.random) {
-  const avail = [...pool(session)];
-  const picked = [];
-  while (picked.length < n && avail.length) {
-    const i = Math.floor(rand() * avail.length);
-    picked.push(avail.splice(i, 1)[0]);
-  }
-  return picked;
+export function pickPrompts(session) {
+  return [...(STORIES[session] || [])];
 }

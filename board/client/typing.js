@@ -1,8 +1,16 @@
-// Pure keystroke evaluation for the cockpit. `matched` drives per-character
-// colouring; `done` fires the progress report. Correctness is judged client-side
-// (the server stays authoritative over position — see the spec's security note).
-export function typedState(target, input) {
-  let matched = 0;
-  while (matched < input.length && matched < target.length && input[matched] === target[matched]) matched++;
-  return { matched, done: input === target };
+// Pure keystroke evaluation for the cockpit's strict terminal line: wrong keys
+// never land, so the typed prefix is always correct and backspace has nothing
+// to do. Correctness is judged client-side (the server stays authoritative
+// over position — see the spec's security note).
+//
+// advance(target, at, incoming) -> new cursor: consumes incoming characters,
+// advancing only while each matches the target at the cursor; the first wrong
+// character stops the walk and the rest is dropped.
+export function advance(target, at, incoming) {
+  let n = at;
+  for (const ch of incoming) {
+    if (n < target.length && ch === target[n]) n += 1;
+    else break;
+  }
+  return n;
 }
