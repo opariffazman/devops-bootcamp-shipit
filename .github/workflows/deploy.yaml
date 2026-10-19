@@ -1,5 +1,7 @@
 name: deploy
-on: [push, workflow_dispatch]
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
 
 defaults:
   run:
@@ -7,6 +9,7 @@ defaults:
 
 jobs:
   test:
+    if: github.event.pull_request.merged == false # tambah
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -17,9 +20,10 @@ jobs:
       - run: bash scripts/report.sh
         env:
           BOARD_URL: ${{ vars.BOARD_URL }}
-          SHIPIT_TOKEN: ${{ secrets.SHIPIT_TOKEN }}      
+          SHIPIT_TOKEN: ${{ secrets.SHIPIT_TOKEN }}
   deploy:
     needs: test
+    if: always() && github.event.pull_request.merged == true # tambah
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -27,13 +31,14 @@ jobs:
       - run: npm clean-install
       - run: npm run build
         env:
-          VITE_BOARD_URL: ${{ vars.BOARD_URL }}      
+          VITE_BOARD_URL: ${{ vars.BOARD_URL }}
       - uses: actions/upload-pages-artifact@v5
         with:
           path: launchpad/dist
-      - uses: actions/deploy-pages@v5      
+      - uses: actions/deploy-pages@v5
 
 # tambah di bawah sekali
 permissions:
   pages: write
   id-token: write
+
