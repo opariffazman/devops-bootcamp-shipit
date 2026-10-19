@@ -13,6 +13,11 @@ jobs:
       - uses: actions/setup-node@v7
       - run: npm clean-install
       - run: npm run test
+      #  ^ tambah di bawah baris ini, indent sama
+      - run: bash scripts/report.sh
+        env:
+          BOARD_URL: ${{ vars.BOARD_URL }}
+          SHIPIT_TOKEN: ${{ secrets.SHIPIT_TOKEN }}      
   deploy:
     needs: test
     runs-on: ubuntu-latest
@@ -21,6 +26,8 @@ jobs:
       - uses: actions/setup-node@v7
       - run: npm clean-install
       - run: npm run build
+        env:
+          VITE_BOARD_URL: ${{ vars.BOARD_URL }}      
       - uses: actions/upload-pages-artifact@v5
         with:
           path: launchpad/dist
