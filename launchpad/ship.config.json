@@ -1,6 +1,6 @@
 {
   "shipName": "op",
-  "color": "green",
-  "shipModel": "scout",
+  "color": "red",
+  "shipModel": "interceptor",
   "emblem": "comet"
 }
